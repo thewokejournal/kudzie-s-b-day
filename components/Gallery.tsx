@@ -94,9 +94,11 @@ interface LightboxProps {
   onPrev: () => void;
   currentIndex: number;
   totalImages: number;
+  isAutoPlaying: boolean;
+  onToggleAutoPlay: () => void;
 }
 
-const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose, onNext, onPrev, currentIndex, totalImages }) => {
+const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose, onNext, onPrev, currentIndex, totalImages, isAutoPlaying, onToggleAutoPlay }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -111,6 +113,15 @@ const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose, onNext, onPrev, 
         className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-amber-500 hover:text-black transition-all duration-300 z-50"
       >
         <i className="fas fa-times text-xl"></i>
+      </button>
+
+      {/* Play/Pause Button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onToggleAutoPlay(); }}
+        className="absolute top-6 right-20 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-amber-500 hover:text-black transition-all duration-300 z-50"
+        title={isAutoPlaying ? 'Pause Slideshow' : 'Play Slideshow'}
+      >
+        <i className={`fas ${isAutoPlaying ? 'fa-pause' : 'fa-play'} text-lg`}></i>
       </button>
 
       {/* Image Counter */}
@@ -153,6 +164,7 @@ const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose, onNext, onPrev, 
 const Gallery: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [imageLoadStates, setImageLoadStates] = useState<Record<number, boolean>>({});
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
 
   const openLightbox = (index: number) => {
     setSelectedImage(index);
@@ -160,6 +172,11 @@ const Gallery: React.FC = () => {
 
   const closeLightbox = () => {
     setSelectedImage(null);
+    setIsAutoPlaying(false);
+  };
+
+  const toggleAutoPlay = () => {
+    setIsAutoPlaying(!isAutoPlaying);
   };
 
   const nextImage = () => {
@@ -182,11 +199,26 @@ const Gallery: React.FC = () => {
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowRight') nextImage();
       if (e.key === 'ArrowLeft') prevImage();
+      if (e.key === ' ') {
+        e.preventDefault();
+        toggleAutoPlay();
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedImage]);
+
+  // Auto-play slideshow
+  React.useEffect(() => {
+    if (!isAutoPlaying || selectedImage === null) return;
+
+    const interval = setInterval(() => {
+      nextImage();
+    }, 4000); // Change image every 4 seconds
+
+    return () => clearInterval(interval);
+  }, [isAutoPlaying, selectedImage]);
 
   return (
     <div className="w-full min-h-screen p-6 md:p-12">
@@ -196,11 +228,22 @@ const Gallery: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-7xl mx-auto mb-12"
       >
-        <h2 className="font-playfair text-4xl md:text-6xl text-amber-400 mb-4">Memory Gallery</h2>
-        <p className="text-amber-200/60 text-lg max-w-2xl">
-          A complete collection of {ALL_IMAGES.length} cherished moments from Kudzie's incredible journey. 
-          Click any image to view in full size.
-        </p>
+        <div className="flex items-start justify-between gap-6">
+          <div>
+            <h2 className="font-playfair text-4xl md:text-6xl text-amber-400 mb-4">Memory Gallery</h2>
+            <p className="text-amber-200/60 text-lg max-w-2xl">
+              A complete collection of {ALL_IMAGES.length} cherished moments from Kudzie's incredible journey. 
+              Click any image to view in full size.
+            </p>
+          </div>
+          <button
+            onClick={() => { openLightbox(0); setIsAutoPlaying(true); }}
+            className="flex-shrink-0 px-6 py-3 bg-amber-500 text-black font-medium rounded-full hover:bg-amber-400 transition-all duration-300 flex items-center gap-2 shadow-lg hover:shadow-amber-500/50"
+          >
+            <i className="fas fa-play text-sm"></i>
+            <span>Start Slideshow</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Masonry Grid */}
@@ -256,6 +299,8 @@ const Gallery: React.FC = () => {
             onPrev={prevImage}
             currentIndex={selectedImage}
             totalImages={ALL_IMAGES.length}
+            isAutoPlaying={isAutoPlaying}
+            onToggleAutoPlay={toggleAutoPlay}
           />
         )}
       </AnimatePresence>
