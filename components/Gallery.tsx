@@ -99,8 +99,36 @@ interface LightboxProps {
 }
 
 const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose, onNext, onPrev, currentIndex, totalImages, isAutoPlaying, onToggleAutoPlay }) => {
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const lightboxRef = React.useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      try {
+        await lightboxRef.current?.requestFullscreen();
+        setIsFullscreen(true);
+      } catch (err) {
+        console.error('Error attempting to enable fullscreen:', err);
+      }
+    } else {
+      await document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  // Listen for fullscreen changes
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   return (
     <motion.div
+      ref={lightboxRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -122,6 +150,15 @@ const Lightbox: React.FC<LightboxProps> = ({ imageUrl, onClose, onNext, onPrev, 
         title={isAutoPlaying ? 'Pause Slideshow' : 'Play Slideshow'}
       >
         <i className={`fas ${isAutoPlaying ? 'fa-pause' : 'fa-play'} text-lg`}></i>
+      </button>
+
+      {/* Fullscreen Button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
+        className="absolute top-6 right-[136px] w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-amber-500 hover:text-black transition-all duration-300 z-50"
+        title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+      >
+        <i className={`fas ${isFullscreen ? 'fa-compress' : 'fa-expand'} text-lg`}></i>
       </button>
 
       {/* Image Counter */}
