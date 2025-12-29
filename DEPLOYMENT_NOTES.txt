@@ -1,0 +1,59 @@
+FIXED ISSUES FOR VERCEL DEPLOYMENT
+===================================
+
+Problem: Black screen on Vercel deployment
+Root Cause: The vite.config.ts had base: '/kudzie-s-bday/' configured for GitHub Pages
+
+CHANGES MADE:
+-------------
+
+1. vite.config.ts
+   - Changed base path from '/kudzie-s-bday/' to '/'
+   - This ensures assets load correctly on Vercel's root domain
+
+2. constants.ts
+   - Updated all photo URLs to include leading slash (e.g., '/WhatsApp Image...')
+   - Ensures images load from public directory correctly
+
+3. vercel.json (NEW FILE)
+   - Added Vercel configuration
+   - Configured SPA routing with rewrites
+   - Set correct build command and output directory
+
+4. .vercelignore (NEW FILE)
+   - Excludes unnecessary files from deployment
+
+5. README.md
+   - Added Vercel deployment instructions
+
+DEPLOYMENT STEPS FOR VERCEL:
+-----------------------------
+
+1. Ensure your code is pushed to GitHub
+
+2. Go to https://vercel.com and sign in
+
+3. Click "Add New Project"
+
+4. Import your GitHub repository
+
+5. Vercel will auto-detect the settings from vercel.json:
+   - Build Command: npm run build
+   - Output Directory: dist
+   - Install Command: npm install
+
+6. Click "Deploy"
+
+7. Wait for deployment to complete (usually 1-2 minutes)
+
+8. Your app will be live at the provided Vercel URL!
+
+VERIFICATION:
+-------------
+✅ Build succeeds without errors
+✅ All images are copied to dist folder
+✅ Asset paths use absolute paths from root (/)
+✅ Preview server runs correctly
+✅ No TypeScript compilation errors
+
+The app should now deploy successfully to Vercel with all images and functionality working correctly!
