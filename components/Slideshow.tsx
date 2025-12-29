@@ -90,6 +90,7 @@ const Slideshow: React.FC<SlideshowProps> = ({ isPlaying, onChapterChange }) => 
   const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [currentPhotoIdx, setCurrentPhotoIdx] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const currentChapter = CHAPTERS[currentChapterIdx];
   const currentPhoto = currentChapter.photos[currentPhotoIdx];
@@ -134,12 +135,33 @@ const Slideshow: React.FC<SlideshowProps> = ({ isPlaying, onChapterChange }) => 
     return () => clearInterval(interval);
   }, [isPlaying, currentChapterIdx, currentPhotoIdx]);
 
-  return (
-    <div className="relative w-full max-w-6xl h-[70vh] md:h-[85vh] group">
-      {/* Decorative Glow */}
-      <div className="absolute -inset-10 bg-amber-500/10 blur-[150px] rounded-full opacity-40 animate-pulse pointer-events-none"></div>
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
 
-      <div className="relative w-full h-full rounded-[3rem] overflow-hidden shadow-[0_60px_120px_rgba(0,0,0,0.95)] border border-white/5 bg-black">
+  // Handle ESC key to exit fullscreen
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [isFullscreen]);
+
+  return (
+    <div className={`relative w-full group transition-all duration-500 ${
+      isFullscreen 
+        ? 'fixed inset-0 z-50 max-w-none h-screen' 
+        : 'max-w-6xl h-[70vh] md:h-[85vh]'
+    }`}>
+      {/* Decorative Glow */}
+      <div className={`absolute -inset-10 bg-amber-500/10 blur-[150px] rounded-full opacity-40 animate-pulse pointer-events-none ${isFullscreen ? 'hidden' : ''}`}></div>
+
+      <div className={`relative w-full h-full overflow-hidden shadow-[0_60px_120px_rgba(0,0,0,0.95)] bg-black ${
+        isFullscreen ? 'rounded-none border-0' : 'rounded-[3rem] border border-white/5'
+      }`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPhoto.id}
@@ -161,7 +183,9 @@ const Slideshow: React.FC<SlideshowProps> = ({ isPlaying, onChapterChange }) => 
         </AnimatePresence>
 
         {/* Caption Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-12 md:p-24 z-20 pointer-events-none">
+        <div className={`absolute bottom-0 left-0 right-0 z-20 pointer-events-none transition-all duration-500 ${
+          isFullscreen ? 'p-6 md:p-10' : 'p-12 md:p-24'
+        }`}>
           <motion.div
             key={`text-${currentPhoto.id}`}
             initial={{ opacity: 0, y: 40 }}
@@ -169,28 +193,40 @@ const Slideshow: React.FC<SlideshowProps> = ({ isPlaying, onChapterChange }) => 
             transition={{ delay: 0.8, duration: 1.2, ease: "easeOut" }}
             className="max-w-4xl"
           >
-            <div className="flex items-center gap-5 mb-8">
-              <span className="bg-amber-500 text-black text-[11px] font-black px-5 py-2 rounded-full uppercase tracking-tighter shadow-2xl">
+            <div className={`flex items-center gap-5 transition-all duration-500 ${
+              isFullscreen ? 'mb-3' : 'mb-8'
+            }`}>
+              <span className={`bg-amber-500 text-black font-black px-5 py-2 rounded-full uppercase tracking-tighter shadow-2xl transition-all duration-500 ${
+                isFullscreen ? 'text-[9px]' : 'text-[11px]'
+              }`}>
                 {currentPhoto.year}
               </span>
-              <div className="h-px w-12 bg-amber-500/30"></div>
-              <span className="text-amber-200/50 text-[10px] tracking-[0.5em] uppercase font-bold">
+              <div className={`h-px bg-amber-500/30 transition-all duration-500 ${
+                isFullscreen ? 'w-8' : 'w-12'
+              }`}></div>
+              <span className={`text-amber-200/50 tracking-[0.5em] uppercase font-bold transition-all duration-500 ${
+                isFullscreen ? 'text-[8px]' : 'text-[10px]'
+              }`}>
                 {currentChapter.title}
               </span>
             </div>
             
-            <h2 className="font-playfair text-5xl md:text-8xl text-white mb-8 leading-[1] drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)]">
+            <h2 className={`font-playfair text-white leading-[1] drop-shadow-[0_10px_30px_rgba(0,0,0,0.9)] transition-all duration-500 ${
+              isFullscreen ? 'text-2xl md:text-4xl mb-2' : 'text-5xl md:text-8xl mb-8'
+            }`}>
               {currentPhoto.caption}
             </h2>
             
-            <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              className="text-amber-50/40 text-sm md:text-xl max-w-2xl italic font-light leading-relaxed"
-            >
-              {currentChapter.description}
-            </motion.p>
+            {!isFullscreen && (
+              <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+                className="text-amber-50/40 text-sm md:text-xl max-w-2xl italic font-light leading-relaxed"
+              >
+                {currentChapter.description}
+              </motion.p>
+            )}
           </motion.div>
         </div>
 
@@ -203,6 +239,15 @@ const Slideshow: React.FC<SlideshowProps> = ({ isPlaying, onChapterChange }) => 
             <i className="fas fa-chevron-right text-xl"></i>
           </button>
         </div>
+
+        {/* Fullscreen Toggle Button */}
+        <button 
+          onClick={toggleFullscreen}
+          className="absolute top-6 right-6 w-12 h-12 rounded-full bg-black/40 backdrop-blur-3xl border border-white/10 flex items-center justify-center text-white hover:bg-amber-500 hover:text-black transition-all duration-500 opacity-0 group-hover:opacity-100 z-30 pointer-events-auto"
+          title={isFullscreen ? 'Exit Fullscreen (ESC)' : 'Enter Fullscreen'}
+        >
+          <i className={`fas ${isFullscreen ? 'fa-compress' : 'fa-expand'} text-lg`}></i>
+        </button>
 
         {/* Cinematic Progress Bar */}
         <div className="absolute bottom-0 left-0 right-0 h-1.5 flex gap-1 px-1.5 z-40 bg-black/80 backdrop-blur-md">
