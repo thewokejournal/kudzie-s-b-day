@@ -6,11 +6,12 @@ import Slideshow from './components/Slideshow';
 import Header from './components/Header';
 import Timeline from './components/Timeline';
 import CareerTribute from './components/CareerTribute';
+import Gallery from './components/Gallery';
 
 const App: React.FC = () => {
   const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [view, setView] = useState<'slideshow' | 'timeline' | 'tribute'>('slideshow');
+  const [view, setView] = useState<'slideshow' | 'timeline' | 'tribute' | 'gallery'>('slideshow');
 
   // Flatten photos for navigation
   const allPhotos = CHAPTERS.flatMap(c => c.photos);
@@ -68,6 +69,18 @@ const App: React.FC = () => {
               className="flex-grow"
             >
               <CareerTribute />
+            </motion.div>
+          )}
+
+          {view === 'gallery' && (
+            <motion.div
+              key="gallery"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex-grow"
+            >
+              <Gallery />
             </motion.div>
           )}
         </AnimatePresence>

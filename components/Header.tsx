@@ -3,8 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 interface HeaderProps {
-  currentView: 'slideshow' | 'timeline' | 'tribute';
-  setView: (view: 'slideshow' | 'timeline' | 'tribute') => void;
+  currentView: 'slideshow' | 'timeline' | 'tribute' | 'gallery';
+  setView: (view: 'slideshow' | 'timeline' | 'tribute' | 'gallery') => void;
   isPlaying: boolean;
   setIsPlaying: (playing: boolean) => void;
 }
@@ -26,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({ currentView, setView, isPlaying, setIsP
         {[
           { id: 'slideshow', label: 'Story', icon: 'fa-play' },
           { id: 'timeline', label: 'Timeline', icon: 'fa-timeline' },
+          { id: 'gallery', label: 'Gallery', icon: 'fa-images' },
           { id: 'tribute', label: 'Career Tribute', icon: 'fa-briefcase' },
         ].map((item) => (
           <button
